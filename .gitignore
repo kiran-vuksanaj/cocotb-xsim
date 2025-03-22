@@ -1,0 +1,10 @@
+__pycache__/
+*~
+*.pb
+*.log
+*.jou
+xsim.dir/
+\#*
+*.so
+*.wdb
+venv/
