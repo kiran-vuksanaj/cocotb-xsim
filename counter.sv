@@ -21,19 +21,19 @@
 
 
 module counter(
-    input wire clk,
-    input wire rst,
-    output logic [31:0] count_out,
-    input wire incr_in
-    );
-    
-    always_ff @(posedge clk) begin
-        if (rst) begin
-            count_out <= 32'h0;
-        end else begin
-            if (incr_in) begin
-                count_out <= count_out + 1;
-            end
-        end
+  input wire          clk,
+  input wire          rst,
+  output logic [31:0] count_out,
+  input wire          incr_in
+);
+
+  always_ff @(posedge clk) begin
+    if (rst) begin
+      count_out <= 32'h0;
+    end else begin
+      if (incr_in) begin
+        count_out <= count_out + 1;
+      end
     end
+  end
 endmodule
