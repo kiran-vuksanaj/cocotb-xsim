@@ -8,3 +8,6 @@ xsim.dir/
 *.so
 *.wdb
 venv/
+
+*.eld
+.Xil/
