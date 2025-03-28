@@ -70,7 +70,7 @@ class XSI_XSimInterface(XSimInterface):
             portname = self._loader.get_port_name(i)
             portsize = self._loader.get_port_size(i)
 
-        print('PORTMAP',portmap)
+        # print('PORTMAP',portmap)
         return portmap
 
 

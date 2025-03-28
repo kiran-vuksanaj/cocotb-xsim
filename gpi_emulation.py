@@ -50,7 +50,7 @@ def register_nextstep_callback(*args, **kwargs):
     raise Exception("Nuh Uh")
 
 def register_rwsynch_callback(cb, ud):
-    print("registering rwSync callback")
+    # print("registering rwSync callback")
     return register_timed_callback(1,cb,ud)
 
 def stop_simulator():
