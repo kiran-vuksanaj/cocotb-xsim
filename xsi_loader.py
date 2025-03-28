@@ -21,7 +21,6 @@ class Xsi_Loader:
     
     def load_libraries(self):
 
-        print("Running load_libraries")
         snapshot_name = os.getenv("SNAPSHOT_NAME")
 
         design_so_file = "xsim.dir/{snapshot_name}/xsimk.so".format(snapshot_name=snapshot_name)
@@ -36,7 +35,9 @@ class Xsi_Loader:
 
     def open_handle(self,logFileName,wdbFileName,trace=True):
 
-        setup_info = Xsi_H.s_xsi_setup_info(logFileName,wdbFileName)
+
+        # setup_info = Xsi_H.s_xsi_setup_info(logFileName,wdbFileName)
+        setup_info = Xsi_H.s_xsi_setup_info(None,None)
 
         self.handle = self.design_lib.xsi_open( ctypes.pointer(setup_info) )
 
@@ -51,7 +52,7 @@ class Xsi_Loader:
         self.kernel_lib.xsi_close( self.handle )
 
     def run(self,steps):
-        step_count = ctypes.c_uint64(steps)
+        step_count = ctypes.c_int64(steps)
         self.kernel_lib.xsi_run( self.handle, step_count )
 
     def get_value(self,port_number):
@@ -112,15 +113,19 @@ class Xsi_H:
 
     class t_xsi_setup_info(ctypes.Structure):
         _fields_ = [("logFileName",ctypes.c_char_p),
-                    ("wdbFileName",ctypes.c_char_p)]
+                    ("wdbFileName",ctypes.c_char_p),
+                    ("xsimDir",ctypes.c_char_p)
+                    ]
     class s_xsi_setup_info(t_xsi_setup_info):
-        def __init__(self,logFileName,wdbFileName):
+        def __init__(self,logFileName,wdbFileName,xsimDir=""):
             if logFileName is not None:
                 logFileName = bytes(logFileName,'utf-8')
             if wdbFileName is not None:
                 wdbFileName = bytes(wdbFileName,'utf-8')
-                
-            super().__init__(logFileName,wdbFileName)
+            if xsimDir is not None:
+                xsimDir = bytes(xsimDir,'utf-8')
+
+            super().__init__(logFileName,wdbFileName,xsimDir)
             
     p_xsi_setup_info = ctypes.POINTER(t_xsi_setup_info)
 
@@ -140,7 +145,7 @@ class Xsi_H:
 
     kernel_lib_defines = {
         'xsi_run': (
-            (xsiHandle, ctypes.c_uint64),
+            (xsiHandle, ctypes.c_int64),
             None
             ),
         'xsi_close': (
