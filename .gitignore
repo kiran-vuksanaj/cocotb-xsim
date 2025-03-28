@@ -11,3 +11,7 @@ venv/
 
 *.eld
 .Xil/
+
+results.xml
+__pycache__/
+sim_build/

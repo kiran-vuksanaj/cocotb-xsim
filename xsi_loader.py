@@ -1,7 +1,18 @@
 import os
 import ctypes
 
+# heavily inspired by themperek/cocotb-vivado; thank you!!
+
 class Xsi_Loader:
+    """
+    Class for
+    
+    """
+    xsiNumTopPorts = 1
+    xsiTimePrecisionKernel = 2
+    xsiDirectionTopPort = 3
+    xsiHDLValueSize = 4
+    xsiNameTopPort = 5
 
     def __init__(self):
         self.load_libraries()
@@ -10,13 +21,14 @@ class Xsi_Loader:
     
     def load_libraries(self):
 
+        print("Running load_libraries")
         snapshot_name = os.getenv("SNAPSHOT_NAME")
 
         design_so_file = "xsim.dir/{snapshot_name}/xsimk.so".format(snapshot_name=snapshot_name)
-        self.design_lib = ctypes.CDLL(design_so_file)
 
         kernel_so_file = "libxv_simulator_kernel.so"
         self.kernel_lib = ctypes.CDLL(kernel_so_file)
+        self.design_lib = ctypes.CDLL(design_so_file)
 
         Xsi_H.define_lib( self.design_lib, Xsi_H.design_lib_defines )
         Xsi_H.define_lib( self.kernel_lib, Xsi_H.kernel_lib_defines )
@@ -50,7 +62,7 @@ class Xsi_Loader:
         port_number = ctypes.c_int(port_number)
 
         self.kernel_lib.xsi_get_value( self.handle, port_number, value_pointer )
-        return value_pointer.aVal
+        return value_space.aVal
 
     def put_value(self,port_number,value):
 
@@ -61,9 +73,14 @@ class Xsi_Loader:
         self.kernel_lib.xsi_put_value( self.handle, port_number, value_pointer )
 
     def get_port_name(self,port_number):
+        """ this doesn't exist in the documentation??? does that mean itll disappear?"""
         port_number = ctypes.c_int(port_number)
-        name_bytes = self.kernel_lib.get_port_name( self.handle, port_number )
-        return name_bytes.decode('utf-8')
+        name_bytes_p = self.kernel_lib.xsi_get_port_name( self.handle, port_number )
+
+        if name_bytes_p is not None:
+            return name_bytes_p.decode('utf-8')
+        else:
+            return None
 
     def get_port_number(self,port_name):
         port_name = bytes(port_name,'utf-8')
@@ -73,8 +90,15 @@ class Xsi_Loader:
         val = self.kernel_lib.get_status( self.handle )
         return val
 
+    def get_time(self):
+        time = self.kernel_lib.xsi_get_time( self.handle )
+        return time
+
+    def get_port_size(self,port_number):
+        port_size = self.kernel_lib.xsi_get_int_port( self.handle, port_number, Xsi_Loader.xsiHDLValueSize )
+        return port_size
+    
     # trace_all
-    # get_time
     # get_error_info
     # isopen
     # restart
@@ -131,6 +155,10 @@ class Xsi_H:
             (xsiHandle, ctypes.c_char_p),
             ctypes.c_int
             ),
+        'xsi_get_port_name': (
+            (xsiHandle, ctypes.c_int),
+            (ctypes.c_char_p)
+        ),
         'xsi_put_value': (
             (xsiHandle, ctypes.c_int, ctypes.c_void_p),
             None
@@ -142,7 +170,15 @@ class Xsi_H:
         'xsi_get_status': (
             (xsiHandle,),
             ctypes.c_int
-            )
+            ),
+        'xsi_get_time': (
+            (xsiHandle,),
+            ctypes.c_int
+        ),
+        'xsi_get_int_port': ( # god i literally don't see docs for this anywhere??
+            (xsiHandle,ctypes.c_int,ctypes.c_int),
+            ctypes.c_int
+        )
 
     }
 

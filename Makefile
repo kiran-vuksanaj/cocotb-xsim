@@ -8,6 +8,8 @@ SOURCES +=counter_tb.sv
 TOPLEVEL=counter
 export SNAPSHOT_NAME=pybound_sim
 
+export MODULE = simple_cocotbtest
+
 .PHONY: compile compile_sv clean clean_log
 
 compile_sv: $(SOURCES)
@@ -17,7 +19,7 @@ compile: compile_sv
 	xelab -top $(TOPLEVEL) -snapshot $(SNAPSHOT_NAME) -debug wave -dll
 
 run: compile
-	python3 testbench.py
+	python3 __init__.py
 
 clean_log:
 	rm -f *.log

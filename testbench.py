@@ -28,6 +28,8 @@ if __name__ == "__main__":
 
     xsiHandler.put_value(clock_port,1)
     xsiHandler.run(5000)
+    print("hi")
+    print("Clock VALUE:", xsiHandler.get_value(clock_port))
 
     print("status:", xsiHandler.get_status())
 
