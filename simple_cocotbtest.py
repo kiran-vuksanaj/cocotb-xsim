@@ -4,6 +4,7 @@ import cocotb
 from cocotb.triggers import Timer
 
 from cocotb.runner import get_runner
+from cocotb.clock import Clock
 
 @cocotb.test()
 async def test_a(dut):
@@ -11,10 +12,25 @@ async def test_a(dut):
     await Timer(300,units='ns')
     dut.clk.value = 1
     await Timer(300,units='ns')
-    print(dut.clk.value)
-    print("done")
+    dut._log.info(f"clock value: {dut.clk.value}")
+    dut._log.info("done")
 
 
+@cocotb.test()
+async def test_b(dut):
+
+    cocotb.start_soon( Clock(dut.clk,10,units='ns').start() )
+    dut.rst.value = 1
+    dut.incr_in.value = 1
+    await Timer(20,'ns')
+    dut.rst.value = 0
+    for i in range(30):
+        count_out_val = dut.count_out.value.integer
+        dut._log.info(f"Count out value: {count_out_val}, i={i}")
+        assert(count_out_val==i)
+        await Timer(10,'ns')
+
+    
 def icarus_reference_testbench():
     tb_name = "simple_cocotbtest"
     sources = ["counter.sv"]
