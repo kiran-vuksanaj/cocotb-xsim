@@ -3,7 +3,9 @@
 import cocotb
 from cocotb.triggers import Timer
 
-from cocotb.runner import get_runner
+# from cocotb.runner import get_runner
+from cocotb_xsim.vivado_runner import get_runner
+
 from cocotb.clock import Clock
 
 @cocotb.test()
@@ -34,7 +36,7 @@ async def test_b(dut):
 def icarus_reference_testbench():
     tb_name = "simple_cocotbtest"
     sources = ["counter.sv"]
-    sim = "icarus"
+    sim = "vivado"
     hdl_toplevel_lang = "verilog"
     toplevel = "counter"
     runner = get_runner(sim)

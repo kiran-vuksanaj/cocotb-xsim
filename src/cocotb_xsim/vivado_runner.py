@@ -1,5 +1,5 @@
 
-from cocotb.runner import Simulator
+import cocotb.runner
 
 from pathlib import Path
 from typing import Dict, List, Mapping, Optional, Sequence, TextIO, Tuple, Type, Union
@@ -11,7 +11,7 @@ import subprocess
 from os import environ
 
 
-class Vivado(Simulator):
+class Vivado(cocotb.runner.Simulator):
 
     supported_gpi_interfaces = {'verilog': ['xsi']}
     
@@ -20,11 +20,13 @@ class Vivado(Simulator):
         if 'XILINX_VIVADO' not in environ:
             raise SystemExit("ERROR: Vivado not found. Run {VIVADO}/settings64.sh if you haven't already.")
 
+    
+
     def _build_command(self) -> Sequence[Command]:
 
         cmds = []
         for source in self.sources:
-            if not is_verilog_source(source):
+            if not cocotb.runner.is_verilog_source(source):
                 raise ValueError(
                     f"So far, only supporting verilog sources. {str(source)} can't be compiled."
                 )
@@ -38,7 +40,7 @@ class Vivado(Simulator):
                     "-top", self.hdl_toplevel,
                     "-snapshot", "pybound_sim",
                     "-debug", "wave",
-                    "-dll'"
+                    "-dll"
                     ]
         cmds.append(elab_cmd)
 
@@ -46,10 +48,31 @@ class Vivado(Simulator):
 
     def _test_command(self) -> Sequence[Command]:
         # bridge to cross: everything needs to become internalized to a module
-        raise NotImplementedError()
+
+        cmd = [
+            ["python3", "-m", "cocotb_xsim"]
+        ]
+
+        xilinx_root = environ['XILINX_VIVADO']
+        self.env["LD_LIBRARY_PATH"] = f"{xilinx_root}/lib/lnx64.o:{xilinx_root}/lib/lnx64.o/Default:"
+        self.env["SNAPSHOT_NAME"] = "pybound_sim"
+
+        return cmd
+
+    def _get_parameter_options(self, paramters: Mapping[str, object]) -> Command:
+        # TODO make this actually return stuff properly... i think fitting the -generic_top "PARAM=1" format
+        return []
         
 
+def get_runner(simulator_name: str) -> cocotb.runner.Simulator:
+    """
+    this is... pretty jank. manually add 'vivado' to the list of supported sims
+    """
 
+    if simulator_name == "vivado":
+        return Vivado()
+    else:
+        return cocotb.runner.get_runner(simulator_name)
 
 
 def makefile_recreate():
@@ -79,7 +102,7 @@ def makefile_recreate():
     new_env["SNAPSHOT_NAME"] = "pybound_sim"
     new_env["MODULE"] = module
     
-    launch_cmd = ["python3", "__init__.py"]
+    launch_cmd = ["python3", "-m", "cocotb_xsim"]
     status = subprocess.run(launch_cmd, env=new_env)
     print(f'launch status: {status}')
 
