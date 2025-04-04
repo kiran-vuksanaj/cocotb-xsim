@@ -2,7 +2,7 @@
 
 # minimally adapted from themperek/cocotb-vivado ; thank you!!
 
-from manager import XSimManager
+from cocotb_xsim.manager import XSimManager
 
 # ********************************************************************
 # * These constants are used by cocotb 'main'

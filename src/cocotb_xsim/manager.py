@@ -2,9 +2,9 @@
 
 # minimally adapted from themperek/cocotb-vivado ; thank you!!
 
-from interface_xsim import XSimInterface, XSI_XSimInterface
+from cocotb_xsim.interface_xsim import XSimInterface, XSI_XSimInterface
 
-from vivado_handles import XsimRootHandle, XsiPortHandle, CbClosure
+from cocotb_xsim.vivado_handles import XsimRootHandle, XsiPortHandle, CbClosure
 
 class XSimManager:
 

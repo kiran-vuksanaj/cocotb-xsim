@@ -19,7 +19,7 @@ compile: compile_sv
 	xelab -top $(TOPLEVEL) -snapshot $(SNAPSHOT_NAME) -debug wave -dll
 
 run: compile
-	python3 __init__.py
+	python3 -m cocotb_xsim
 
 clean_log:
 	rm -f *.log
@@ -32,5 +32,5 @@ clean: clean_log
 	rm -f \#*
 	rm -f *.so
 	rm -f *.wdb
-
-
+	rm -f results.xml
+	rm -rf __pycache__
