@@ -1,18 +1,55 @@
-# import cocotb.runner
 
-# class Vivado(cocotb.runner.Runner):
-#     def __init__(self):
-#         print("hi")
+from cocotb.runner import Simulator
 
-# def get_runner(simulator_name):
-
-#     if simulator_name == 'vivado':
-#         return Vivado()
-#     return cocotb.runner.get_runner()
-
+from pathlib import Path
+from typing import Dict, List, Mapping, Optional, Sequence, TextIO, Tuple, Type, Union
+PathLike = Union["os.PathLike[str]", str]
+Command = List[str]
+Timescale = Tuple[str, str]
 
 import subprocess
 from os import environ
+
+
+class Vivado(Simulator):
+
+    supported_gpi_interfaces = {'verilog': ['xsi']}
+    
+    @staticmethod
+    def _simulator_in_path() -> None:
+        if 'XILINX_VIVADO' not in environ:
+            raise SystemExit("ERROR: Vivado not found. Run {VIVADO}/settings64.sh if you haven't already.")
+
+    def _build_command(self) -> Sequence[Command]:
+
+        cmds = []
+        for source in self.sources:
+            if not is_verilog_source(source):
+                raise ValueError(
+                    f"So far, only supporting verilog sources. {str(source)} can't be compiled."
+                )
+            # TODO maybe should be redone for a .v file ending?
+            cmds.append(['xvlog','-sv', str(source)])
+
+
+        self.snapshot_name = "pybound_sim"
+            
+        elab_cmd = ["xelab",
+                    "-top", self.hdl_toplevel,
+                    "-snapshot", "pybound_sim",
+                    "-debug", "wave",
+                    "-dll'"
+                    ]
+        cmds.append(elab_cmd)
+
+        return cmds
+
+    def _test_command(self) -> Sequence[Command]:
+        # bridge to cross: everything needs to become internalized to a module
+        raise NotImplementedError()
+        
+
+
 
 
 def makefile_recreate():
