@@ -21,7 +21,7 @@ class Xsi_Loader:
     
     def load_libraries(self):
 
-        snapshot_name = os.getenv("SNAPSHOT_NAME")
+        snapshot_name = os.getenv("VIVADO_SNAPSHOT_NAME")
 
         design_so_file = "xsim.dir/{snapshot_name}/xsimk.so".format(snapshot_name=snapshot_name)
 

@@ -39,11 +39,12 @@ def register_timed_callback(t, cb, ud):
     return XSimManager.inst().register_cb(t,cb,ud)
 
 
-def register_value_change_callback(*args, **kwargs):
-    raise Exception("Nuh Uh")
+def register_value_change_callback(handle,callback,edge,ud):
+    return XSimManager.inst().register_vc_cb(handle,callback,edge,ud)
 
-def register_readonly_callback(*args, **kwargs):
-    raise Exception("Nuh Uh")
+def register_readonly_callback(cb,ud):
+    # jankjankjank
+    return register_timed_callback(1,cb,ud)
 
 
 def register_nextstep_callback(*args, **kwargs):

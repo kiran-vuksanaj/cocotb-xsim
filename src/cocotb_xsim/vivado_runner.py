@@ -55,7 +55,7 @@ class Vivado(cocotb.runner.Simulator):
 
         xilinx_root = environ['XILINX_VIVADO']
         self.env["LD_LIBRARY_PATH"] = f"{xilinx_root}/lib/lnx64.o:{xilinx_root}/lib/lnx64.o/Default:"
-        self.env["SNAPSHOT_NAME"] = "pybound_sim"
+        self.env["VIVADO_SNAPSHOT_NAME"] = "pybound_sim"
 
         return cmd
 

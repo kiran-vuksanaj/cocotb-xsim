@@ -1,6 +1,7 @@
 README.md
 setup.py
 src/cocotb_xsim/__init__.py
+src/cocotb_xsim/__main__.py
 src/cocotb_xsim/gpi_emulation.py
 src/cocotb_xsim/interface_xsim.py
 src/cocotb_xsim/manager.py

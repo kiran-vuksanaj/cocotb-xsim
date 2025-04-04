@@ -4,7 +4,7 @@
 
 from cocotb_xsim.interface_xsim import XSimInterface, XSI_XSimInterface
 
-from cocotb_xsim.vivado_handles import XsimRootHandle, XsiPortHandle, CbClosure
+from cocotb_xsim.vivado_handles import XsimRootHandle, XsiPortHandle, TimedCbClosure, ValueChangeCbClosure
 
 class XSimManager:
 
@@ -23,6 +23,17 @@ class XSimManager:
         self.sim = interface_type()
         self.ports = {}
         self._cbqueue = {}
+        self._vcqueue = []
+
+    def attempt_valuechange_callbacks(self):
+        # print(f"making attempts on {len(self._vcqueue)}")
+        for vc in self._vcqueue:
+            if vc is not None and vc.change_condition_satisfied():
+                vc()
+                # print("removing one")
+                self._vcqueue.remove(vc)
+            # else:
+            #     print("No")
 
 
     def run(self):
@@ -36,6 +47,8 @@ class XSimManager:
             for cb in self._cbqueue[next_time]:
                 if cb is not None:
                     cb()
+                # TODO this does not seem comprehensive yet; checking value changes /once/
+                self.attempt_valuechange_callbacks()
 
             self._cbqueue.pop(next_time)
 
@@ -58,7 +71,7 @@ class XSimManager:
 
     def register_cb(self,t,cb,ud):
 
-        ret = CbClosure(t,cb,ud)
+        ret = TimedCbClosure(t,cb,ud)
 
         time_to_fire = self.get_sim_time()+t
 
@@ -69,7 +82,12 @@ class XSimManager:
         
         return ret
         # print("ud",ud)
-        
+
+    def register_vc_cb(self,handle,callback,edge,ud):
+        # print("adding one")
+        closure = ValueChangeCbClosure(handle,edge,callback,ud)
+        self._vcqueue.append(closure)
+        return closure
         
 
     def get_sim_time(self):

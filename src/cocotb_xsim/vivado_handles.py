@@ -5,6 +5,9 @@ MODULE = 0
 REG = 2
 
 import abc
+from collections.abc import Callable
+from typing import Dict, List, Mapping, Optional, Sequence, TextIO, Tuple, Type, Union, Any
+
 
 class XsimRootHandle(object):
     def __init__(self, mgr):
@@ -85,13 +88,14 @@ class XsiPortHandle(object):
         binstr = format_str.format(value=value)
         return binstr
 
+    def get_signal_val_int(self):
+        value = self.mgr.sim.sim_getvalue(self.name)
+        return value
 
-class CbClosure(object):
-    def __init__(self, time_off, cb, ud):
-        self.time_off = time_off
-        self.cb = cb
-        self.ud = ud
-        self.cb_id = 1
+class CbClosure(abc.ABC):
+    def __init__(self) -> None:
+        self.cb: Union[Callable[[Any],None],None] = None
+        self.ud: Any = None
 
     def __call__(self):
         if self.cb is not None:
@@ -99,3 +103,31 @@ class CbClosure(object):
 
     def deregister(self):
         self.cb = None
+
+class TimedCbClosure(CbClosure):
+    def __init__(self, time_off, cb, ud):
+        self.time_off = time_off
+        self.cb = cb
+        self.ud = ud
+        self.cb_id = 1
+
+class ValueChangeCbClosure(CbClosure):
+
+    def __init__(self, handle, edge, cb, ud):
+        self.handle = handle
+        self.cb = cb
+        self.ud = ud
+        self.edge = edge
+
+        self.previous_value = handle.get_signal_val_int()
+
+    def change_condition_satisfied(self):
+        current_value = self.handle.get_signal_val_int()
+        # print(f"Change condition satisfied? {self.previous_value}, {current_value}, {self.handle}, {self.edge}")
+        if self.edge == 1:
+            out = current_value > self.previous_value
+        else:
+            out = current_value < self.previous_value
+
+        self.previous_value = current_value
+        return out
