@@ -15,11 +15,12 @@ source /tools/Xilinx/Vivado/2024.2/settings64.sh
 ``` sh
 python3 -m venv venv
 source venv/bin/activate
-pip3 install -r requirements.txt
+pip3 install -e .
 ```
 * run the tests here:
 
 ``` sh
+cd test/
 make run
 ```
 
