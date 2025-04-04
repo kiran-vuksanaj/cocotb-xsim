@@ -29,9 +29,10 @@ TODO diagram + descriptions of operations (compare between normal cocotb and thi
 
 
 ### Upcoming things to work on
-- organize into directories properly, make more tests
-- restore proper management of undefined variables
+- ~~organize into directories properly~~, make more tests
+- ~~python test runner object~~
 - Make rising/falling edge triggers in the manager
+- restore proper management of undefined variables
 - Build second backend for launching a TCL shell for the simulator and interacting with Vivado through that
 - Export to vcd files
 - simplified way to go from Vivado IP to cocotb simulation
