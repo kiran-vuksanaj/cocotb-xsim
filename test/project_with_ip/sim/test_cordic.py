@@ -1,6 +1,8 @@
 import cocotb
 from cocotb.triggers import Timer
 
+
+from pathlib import Path
 # from cocotb.runner import get_runner
 from cocotb_xsim.vivado_runner import get_runner
 
@@ -8,7 +10,7 @@ from cocotb.clock import Clock
 
 
 @cocotb.test()
-async def test_a(dut):
+async def simple_timers(dut):
     cocotb.start_soon( Clock(dut.aclk,10,units='ns').start() )
     dut.s_axis_cartesian_tvalid.value = 0
     dut.s_axis_cartesian_tdata.value = 1
@@ -25,11 +27,10 @@ async def test_a(dut):
     
 
 
-
-
-def run_testbench():
-    tb_name = "cordic_tb"
-    sources = ["../hdl/cordic_wrap.sv","../ip/cordic_0/cordic_0.xci"]
+def test_cordictb():
+    tb_name = "test_cordic"
+    proj_path = Path(__file__).resolve().parent
+    sources = [proj_path / "../hdl/cordic_wrap.sv", proj_path / "../ip/cordic_0/cordic_0.xci"]
     sim = "vivado"
     hdl_toplevel_lang = "verilog"
     toplevel = "cordic_wrap"
@@ -48,4 +49,4 @@ def run_testbench():
         waves=True)
 
 if __name__ == "__main__":
-    run_testbench()
+    test_cordictb()

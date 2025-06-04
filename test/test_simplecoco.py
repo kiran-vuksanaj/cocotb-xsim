@@ -2,6 +2,7 @@
 
 import cocotb
 from cocotb.triggers import Timer
+from pathlib import Path
 
 # from cocotb.runner import get_runner
 from cocotb_xsim.vivado_runner import get_runner
@@ -9,7 +10,7 @@ from cocotb_xsim.vivado_runner import get_runner
 from cocotb.clock import Clock
 
 @cocotb.test()
-async def test_a(dut):
+async def cocotb_a(dut):
     dut.clk.value = 0
     await Timer(300,units='ns')
     dut.clk.value = 1
@@ -19,7 +20,7 @@ async def test_a(dut):
 
 
 @cocotb.test()
-async def test_b(dut):
+async def cocotb_b(dut):
 
     cocotb.start_soon( Clock(dut.clk,10,units='ns').start() )
     dut.rst.value = 1
@@ -33,9 +34,11 @@ async def test_b(dut):
         await Timer(10,'ns')
 
     
-def icarus_reference_testbench():
-    tb_name = "simple_cocotbtest"
-    sources = ["../hdl/counter.sv","../ip/cordic_0/cordic_0.xci"]
+def test_completetb():
+    tb_name = "test_simplecoco"
+
+    proj_path = Path(__file__).resolve().parent
+    sources = [proj_path / "counter.sv", proj_path / "project_with_ip/ip/cordic_0/cordic_0.xci"]
     sim = "vivado"
     hdl_toplevel_lang = "verilog"
     toplevel = "counter"
@@ -50,8 +53,8 @@ def icarus_reference_testbench():
     runner.test(
         hdl_toplevel=toplevel,
         test_module=tb_name,
-        hdl_toplevel_lang="verilog",
+        hdl_toplevel_lang=hdl_toplevel_lang,
         waves=True)
 
 if __name__ == "__main__":
-    icarus_reference_testbench()
+    test_completetb()

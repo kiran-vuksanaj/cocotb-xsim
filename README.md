@@ -1,11 +1,11 @@
 ## Cocotb + Vivado XSim
 
-Following closely in the footsteps of (/for now, a slightly indirect fork of) themperek's [cocotb-vivado](github.com/themperek/cocotb-vivado)
+Following closely in the footsteps of themperek's [cocotb-vivado](github.com/themperek/cocotb-vivado)
 
 
 ### Getting things running
 * make sure you have Python installed in such a way that libpython / the `<Python.h>` file exists; from `apt`, this might look like installing `python3-dev`. If you have cocotb running, this should already be handled.
-* make sure you have Vivado (2024.2 is what I've been building for) installed, and its paths etc. added to your terminal: you `.bashrc` might need a line like
+* make sure you have Vivado (2024.2 is what I've been building for) installed, and its paths etc. added to your terminal: your `.bashrc` might need a line like
 ``` sh
 source /tools/Xilinx/Vivado/2024.2/settings64.sh
 ```
@@ -20,8 +20,7 @@ pip3 install -e .
 * run the tests here:
 
 ``` sh
-cd test/
-make run
+pytest -s test/
 ```
 
 ### submodules here
