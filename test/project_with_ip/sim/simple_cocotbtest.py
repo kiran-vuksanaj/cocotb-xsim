@@ -35,7 +35,7 @@ async def test_b(dut):
     
 def icarus_reference_testbench():
     tb_name = "simple_cocotbtest"
-    sources = ["counter.sv","project_with_ip/ip/cordic_0/cordic_0.xci"]
+    sources = ["../hdl/counter.sv","../ip/cordic_0/cordic_0.xci"]
     sim = "vivado"
     hdl_toplevel_lang = "verilog"
     toplevel = "counter"
@@ -50,7 +50,7 @@ def icarus_reference_testbench():
     runner.test(
         hdl_toplevel=toplevel,
         test_module=tb_name,
-        hdl_toplevel_lang=hdl_toplevel_lang,
+        hdl_toplevel_lang="verilog",
         waves=True)
 
 if __name__ == "__main__":

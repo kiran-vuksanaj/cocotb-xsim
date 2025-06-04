@@ -20,18 +20,63 @@ class Vivado(cocotb.runner.Simulator):
         if 'XILINX_VIVADO' not in environ:
             raise SystemExit("ERROR: Vivado not found. Run {VIVADO}/settings64.sh if you haven't already.")
 
-    
+        
+    def _ip_synth_cmds(self, xci_files: Sequence[PathLike], partNum: Union[str,None] = None) -> Sequence[Command]:
+        """
+        file-generation + commands in order to synthesize ip for
+        """
+
+        if partNum == None:
+            partNum = "xc7s50csga324-1"
+
+        # build tiny vivado script to use
+        with open(self.build_dir / "build_ip.tcl","w") as f:
+            f.write(f"set partNum {partNum}\n")
+            f.write("set_part $partNum\n")
+
+            for xci_path in xci_files:
+                f.write(f"read_ip {xci_path}\n")
+            f.write("export_ip_user_files\n")
+
+        ip_cmds: Sequence[Command] = []
+        ip_cmds.append( ['vivado', '-mode', 'batch', '-source', 'build_ip.tcl'] )
+
+        for xci_filename in xci_files:
+            xci_as_path = Path(xci_filename)
+            ip_name = xci_as_path.stem
+            print("IP Name:", ip_name)
+
+            prj_entry_name = Path('.ip_user_files') / 'sim_scripts' / ip_name / 'xsim' / 'vhdl.prj'
+            ip_cmds.append( ['xvhdl', '--incr', '--relax', '-prj', str(prj_entry_name)] )
+        
+        return ip_cmds
+        
 
     def _build_command(self) -> Sequence[Command]:
 
         cmds = []
+
+        ip_sources = []
         for source in self.sources:
-            if not cocotb.runner.is_verilog_source(source):
+            if cocotb.runner.is_verilog_source(source):
+                # TODO maybe should be redone for a .v file ending?
+                cmds.append(['xvlog','-sv', str(source)])
+            elif cocotb.runner.is_vhdl_source(source):
+                cmds.append(['xvhdl', str(source)])
+            elif ".xci" in str(source):
+                # JANK as fuck
+                ip_sources.append(str(source))
+            else:
                 raise ValueError(
-                    f"So far, only supporting verilog sources. {str(source)} can't be compiled."
+                    f"Unknown file type: {str(source)} can't be compiled."
                 )
-            # TODO maybe should be redone for a .v file ending?
-            cmds.append(['xvlog','-sv', str(source)])
+
+
+        cmds.extend( self._ip_synth_cmds(ip_sources) )
+        # cmds.append(['vivado', '-mode', 'batch', '-source', 'build_ip.tcl'])
+        # cmds.append(['xvhdl', '--incr', '--relax', '-prj', '.ip_user_files/sim_scripts/cordic_0/xsim/vhdl.prj'])
+        # cmds.append
+        # cmds.append(['xvhdl','--incr', '--relax', '-prj', '/home/kiranv/Documents/fpga/vivgui/getfifos/getfifos.ip_user_files/sim_scripts/cordic_0/xsim/vhdl.prj'])
 
 
         self.snapshot_name = "pybound_sim"
@@ -40,9 +85,12 @@ class Vivado(cocotb.runner.Simulator):
                     "-top", self.hdl_toplevel,
                     "-snapshot", "pybound_sim",
                     "-debug", "wave",
-                    "-dll"
+                    "-dll",
+                    "-L","xil_defaultlib"
                     ]
         cmds.append(elab_cmd)
+
+        print("Build Commands: ",cmds)
 
         return cmds
 

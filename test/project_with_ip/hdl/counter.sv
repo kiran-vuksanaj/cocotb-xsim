@@ -37,7 +37,7 @@ module counter(
   input wire          rst,
   output logic [31:0] count_out,
   input wire          incr_in,
-  output logic [15:0] cordic_out,
+  output logic [16:0] cordic_out,
   output logic        cordic_valid
 );
 
@@ -51,13 +51,11 @@ module counter(
     end
   end
 
-  logic [15:0] cartesian_data;
-  logic        cartesian_valid;
 
   cordic_0 cordic_utm(
     .aclk(clk),
-    .s_axis_cartesian_tvalid(cartesian_valid),
-    .s_axis_cartesian_tdata(cartesian_data),
+    .s_axis_cartesian_tvalid(0),
+    .s_axis_cartesian_tdata(0),
     .m_axis_dout_tvalid(cordic_valid),
     .m_axis_dout_tdata(cordic_out)
     
