@@ -39,16 +39,26 @@ class Vivado(cocotb.runner.Simulator):
             f.write("export_ip_user_files\n")
 
         ip_cmds: Sequence[Command] = []
-        ip_cmds.append( ['vivado', '-mode', 'batch', '-source', 'build_ip.tcl'] )
+
+        self._execute( [['vivado', '-mode', 'batch', '-source', 'build_ip.tcl']], cwd=self.build_dir)
 
         for xci_filename in xci_files:
             xci_as_path = Path(xci_filename)
             ip_name = xci_as_path.stem
             print("IP Name:", ip_name)
 
-            prj_entry_name = Path('.ip_user_files') / 'sim_scripts' / ip_name / 'xsim' / 'vhdl.prj'
-            ip_cmds.append( ['xvhdl', '--incr', '--relax', '-prj', str(prj_entry_name)] )
-        
+            ip_bash_root = self.build_dir / '.ip_user_files' / 'sim_scripts' / ip_name / 'xsim'
+            
+            vhdl_proj = ip_bash_root / 'vhdl.prj'
+            vlog_proj = ip_bash_root / 'vlog.prj'
+
+            if vhdl_proj.exists():
+                ip_cmds.append( ['xvhdl','--incr','--relax','-prj',str(vhdl_proj)] )
+            if vlog_proj.exists():
+                ip_cmds.append( ['xvlog','--incr','--relax','-prj',str(vlog_proj)] )
+            
+            # ip_cmds.append( ['sh','-c', f"cd {ip_bash_root} && ./{ip_name}.sh -step compile"] )
+
         return ip_cmds
         
 
