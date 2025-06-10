@@ -3,6 +3,20 @@ import ctypes
 # import cocotb
 # heavily inspired by themperek/cocotb-vivado; thank you!!
 
+# char conversion for values 0-8 as specified by UG900 IEEE std_logic type
+VHDL_std_logic = ['U','X','0','1','Z','W','L','H','_']
+VHDL_binstr_to_std_logic = {
+    'U':0,
+    'X':1,
+    '0':2,
+    '1':3,
+    'Z':4,
+    'W':5,
+    'L':6,
+    'H':7,
+    '_':8
+}
+
 class Xsi_Loader:
     """
     Class for
@@ -13,6 +27,7 @@ class Xsi_Loader:
     xsiDirectionTopPort = 3
     xsiHDLValueSize = 4
     xsiNameTopPort = 5
+
 
     def __init__(self):
         self.load_libraries()
@@ -67,9 +82,10 @@ class Xsi_Loader:
             array_type = Xsi_H.s_xsi_vlog_logicval * num_spaces
             return array_type
         elif self.toplevel_lang == "vhdl":
-            raise NotImplementedError("vhdl toplevel still coming")
+            array_type = ctypes.c_char * port_size
+            return array_type
         else:
-            raise NotImplementedError(f"Unknown toplevel language {self.toplevel_lang} (not verilog or vhdl)")
+            raise KeyError(f"Unknown toplevel language {self.toplevel_lang} (not verilog or vhdl)")
         
     def xsi2binstr(self,val_array,port_size):
 
@@ -92,7 +108,11 @@ class Xsi_Loader:
 
                 output = ''.join(binary_bits) + output
         else:
-            raise NotImplementedError("vhdl toplevel still coming...")
+            for val in val_array:
+                # each val should be a ctypes.c_char
+                byte_val = ord(val)
+                binstr_char = VHDL_std_logic[byte_val]
+                output = output + binstr_char
             
 
         # trim excess zeroes from the front
@@ -101,6 +121,7 @@ class Xsi_Loader:
 
     def binstr2xsi(self,binstr,port_size):
         assert(len(binstr)==port_size)
+        binstr = binstr.upper()
         memory_space = self.xsi_compliant_space_type(port_size)()
         
         if (self.toplevel_lang == 'verilog'):
@@ -123,7 +144,13 @@ class Xsi_Loader:
 
             return memory_space
         else:
-            raise NotImplementedError("vhdl toplevel still coming")
+            for i in range(port_size):
+                # binstr_char = binstr[port_size-1-i]
+                binstr_char = binstr[i]
+                binstr_byteval = VHDL_binstr_to_std_logic[binstr_char]
+                memory_space[i] = binstr_byteval
+            return memory_space
+                
 
 
     def get_value(self,port_number,port_size):

@@ -13,7 +13,7 @@ from cocotb.clock import Clock
 async def simple_timers(dut):
     cocotb.start_soon( Clock(dut.aclk,10,units='ns').start() )
     dut.s_axis_cartesian_tvalid.value = 0
-    dut.s_axis_cartesian_tdata.value = 1
+    dut.s_axis_cartesian_tdata.value = 8
 
     await Timer(20,units='ns')
     dut.s_axis_cartesian_tvalid.value = 1
@@ -21,6 +21,7 @@ async def simple_timers(dut):
     dut.s_axis_cartesian_tvalid.value = 0
     await Timer(2000,units='ns')
     dut._log.info(f"Output: 0x{dut.m_axis_dout_tdata.value.integer:x}")
+    # dut._log.info(f"Output: 0b{dut.m_axis_dout_tdata.value.binstr}")
     dut.s_axis_cartesian_tvalid.value = 0
     await Timer(30000,units='ns')
     dut._log.info("done")
@@ -32,8 +33,10 @@ def test_cordictb():
     proj_path = Path(__file__).resolve().parent
     sources = [proj_path / "../hdl/cordic_wrap.sv", proj_path / "../ip/cordic_0/cordic_0.xci"]
     sim = "vivado"
-    hdl_toplevel_lang = "verilog"
-    toplevel = "cordic_wrap"
+    hdl_toplevel_lang = "vhdl"
+    toplevel = "xil_defaultlib.cordic_0"
+    # hdl_toplevel_lang = "verilog"
+    # toplevel = "cordic_wrap"
     runner = get_runner(sim)
 
     runner.build(
@@ -45,7 +48,7 @@ def test_cordictb():
     runner.test(
         hdl_toplevel=toplevel,
         test_module=tb_name,
-        hdl_toplevel_lang="verilog",
+        hdl_toplevel_lang=hdl_toplevel_lang,
         waves=True)
 
 if __name__ == "__main__":

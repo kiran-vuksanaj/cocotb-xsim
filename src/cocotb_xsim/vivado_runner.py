@@ -13,7 +13,7 @@ from os import environ
 
 class Vivado(cocotb.runner.Simulator):
 
-    supported_gpi_interfaces = {'verilog': ['xsi']}
+    supported_gpi_interfaces = {'verilog': ['xsi'], 'vhdl': ['xsi']}
     
     @staticmethod
     def _simulator_in_path() -> None:
