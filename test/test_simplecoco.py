@@ -6,8 +6,14 @@ from pathlib import Path
 
 # from cocotb.runner import get_runner
 from cocotb_xsim.vivado_runner import get_runner
-
+from cocotb.binary import BinaryValue
 from cocotb.clock import Clock
+
+@cocotb.test()
+async def undefined_values(dut):
+
+    await Timer(20,'ns')
+    dut._log.info(f"count out value with no set inputs: {dut.count_out.value}")
 
 @cocotb.test()
 async def cocotb_a(dut):
@@ -16,6 +22,10 @@ async def cocotb_a(dut):
     dut.clk.value = 1
     await Timer(300,units='ns')
     dut._log.info(f"clock value: {dut.clk.value}")
+    dut._log.info(f"value type: {type(dut.clk.value)}")
+    dut.incr_in.value = BinaryValue('Z')
+    await Timer(20,units='ns')
+    dut._log.info(f"incr value: {dut.incr_in.value.binstr}")
     dut._log.info("done")
 
 
@@ -30,8 +40,11 @@ async def cocotb_b(dut):
     for i in range(30):
         count_out_val = dut.count_out.value.integer
         dut._log.info(f"Count out value: {count_out_val}, i={i}")
+        # assert(count_out_val==i*(2**32))
         assert(count_out_val==i)
         await Timer(10,'ns')
+    dut._log.info( f'cordic_out: {dut.cordic_out.value.binstr}' )
+    dut._log.info( f'cordic_valid: {dut.cordic_valid.value.binstr}' )
 
     
 def test_completetb():

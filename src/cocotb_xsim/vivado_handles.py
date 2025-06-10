@@ -75,18 +75,19 @@ class XsiPortHandle(object):
 
     def set_signal_val_int(self, action, value):
         # also what does action do?
-        # str_value = f"{value:0{self.size}b}"
-        self.mgr.sim.sim_setvalue(self.name, value)
+        str_value = f"{value:0{self.size}b}"
+        self.mgr.sim.sim_setvalue(self.name, str_value)
 
     def set_signal_val_binstr(self, action, value):
-        value_int = int(value,2)
-        self.mgr.sim.sim_setvalue(self.name, value_int)
+        self.mgr.sim.sim_setvalue(self.name, value)
 
     def get_signal_val_binstr(self):
         value = self.mgr.sim.sim_getvalue(self.name)
-        format_str = "{value:0"+str(self.size)+"b}"
-        binstr = format_str.format(value=value)
-        return binstr
+        # this should return a binstr
+        return value
+        # format_str = "{value:0"+str(self.size)+"b}"
+        # binstr = format_str.format(value=value)
+        # return binstr
 
     def get_signal_val_int(self):
         value = self.mgr.sim.sim_getvalue(self.name)

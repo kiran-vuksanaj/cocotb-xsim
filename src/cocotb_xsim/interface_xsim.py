@@ -60,12 +60,13 @@ class XSI_XSimInterface(XSimInterface):
         self._active = False
 
     def _load_portmap(self):
-        portmap = []
+        portmap = {}
         i = 0
         portname = self._loader.get_port_name(i)
         portsize = self._loader.get_port_size(i)
         while portname is not None:
-            portmap.append((portname,portsize))
+            portmap[portname] = (i,portsize)
+            # portmap.append((portname,portsize))
             i += 1
             portname = self._loader.get_port_name(i)
             portsize = self._loader.get_port_size(i)
@@ -76,18 +77,21 @@ class XSI_XSimInterface(XSimInterface):
 
     def list_port_names(self):
         return self._portmap
+        # return self._portmap
 
 
     def advance(self,steps):
         self._loader.run(steps)
 
     def sim_getvalue(self,portname):
-        portnum = [info[0] for info in self._portmap].index(portname)
-        return self._loader.get_value(portnum)
+        # portnum = [info[0] for info in self._portmap].index(portname)
+        portnum,portsize = self._portmap[portname]
+        return self._loader.get_value(portnum,portsize)
 
     def sim_setvalue(self,portname,val):
-        portnum = [info[0] for info in self._portmap].index(portname)
-        self._loader.put_value(portnum,val)
+        portnum,portsize = self._portmap[portname]
+        # portnum = [info[0] for info in self._portmap].index(portname)
+        self._loader.put_value(portnum,portsize,val)
 
     def sim_getsimtime(self):
         return self._loader.get_time()

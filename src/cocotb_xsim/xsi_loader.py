@@ -1,6 +1,6 @@
 import os
 import ctypes
-
+# import cocotb
 # heavily inspired by themperek/cocotb-vivado; thank you!!
 
 class Xsi_Loader:
@@ -16,6 +16,10 @@ class Xsi_Loader:
 
     def __init__(self):
         self.load_libraries()
+
+        self.toplevel_lang = os.getenv('TOPLEVEL_LANG')
+        if self.toplevel_lang is None:
+            self.toplevel_lang = 'verilog'
 
         self.handle = ctypes.c_void_p(None)
     
@@ -34,7 +38,6 @@ class Xsi_Loader:
 
 
     def open_handle(self,logFileName,wdbFileName,trace=True):
-
 
         # setup_info = Xsi_H.s_xsi_setup_info(logFileName,wdbFileName)
         setup_info = Xsi_H.s_xsi_setup_info(None,None)
@@ -55,19 +58,88 @@ class Xsi_Loader:
         step_count = ctypes.c_int64(steps)
         self.kernel_lib.xsi_run( self.handle, step_count )
 
-    def get_value(self,port_number):
 
-        value_space = Xsi_H.s_xsi_vlog_logicval(0,0)
+
+    def xsi_compliant_space_type(self,port_size):
+        assert port_size>0,f"illegal port size {port_size}"
+        if self.toplevel_lang == "verilog":
+            num_spaces = ((port_size-1) // 32)+1
+            array_type = Xsi_H.s_xsi_vlog_logicval * num_spaces
+            return array_type
+        elif self.toplevel_lang == "vhdl":
+            raise NotImplementedError("vhdl toplevel still coming")
+        else:
+            raise NotImplementedError(f"Unknown toplevel language {self.toplevel_lang} (not verilog or vhdl)")
+        
+    def xsi2binstr(self,val_array,port_size):
+
+        ### val_ptr should be an array type
+        output = ""
+        if (self.toplevel_lang == 'verilog'):
+            for val in val_array:
+
+                binary_bits = list("{:032b}".format(val.aVal))
+
+                bVal = val.bVal
+                for i in range(32):
+                    if ((bVal >> i) & 1):
+                        if binary_bits[31-i] == '0':
+                            binary_bits[31-i] = 'Z'
+                        else:
+                            binary_bits[31-i] = 'X'
+                
+                # prepend new section
+
+                output = ''.join(binary_bits) + output
+        else:
+            raise NotImplementedError("vhdl toplevel still coming...")
+            
+
+        # trim excess zeroes from the front
+        output = output[-port_size:]
+        return output
+
+    def binstr2xsi(self,binstr,port_size):
+        assert(len(binstr)==port_size)
+        memory_space = self.xsi_compliant_space_type(port_size)()
+        
+        if (self.toplevel_lang == 'verilog'):
+
+            for i in range(0,port_size,32):
+                binstr_substring = binstr[-32:]
+                binstr = binstr[:-32]
+                aVal_str = binstr_substring
+                aVal_str = aVal_str.replace('X','1')
+                aVal_str = aVal_str.replace('Z','0')
+
+                bVal_str = binstr_substring
+                bVal_str = bVal_str.replace('1','0')
+                bVal_str = bVal_str.replace('X','1')
+                bVal_str = bVal_str.replace('Z','1')
+
+                aVal = int(aVal_str,2)
+                bVal = int(bVal_str,2)
+                memory_space[i] = Xsi_H.s_xsi_vlog_logicval(aVal,bVal)
+
+            return memory_space
+        else:
+            raise NotImplementedError("vhdl toplevel still coming")
+
+
+    def get_value(self,port_number,port_size):
+
+        value_space_type = self.xsi_compliant_space_type(port_size)
+        value_space = value_space_type()
         value_pointer = ctypes.pointer(value_space)
 
         port_number = ctypes.c_int(port_number)
 
         self.kernel_lib.xsi_get_value( self.handle, port_number, value_pointer )
-        return value_space.aVal
 
-    def put_value(self,port_number,value):
+        return self.xsi2binstr(value_pointer.contents,port_size)
 
-        value_space = Xsi_H.s_xsi_vlog_logicval(value,0)
+    def put_value(self,port_number,port_size,value):
+        value_space = self.binstr2xsi(value,port_size)
         value_pointer = ctypes.pointer(value_space)
 
         port_number = ctypes.c_int(port_number)
@@ -98,6 +170,8 @@ class Xsi_Loader:
     def get_port_size(self,port_number):
         port_size = self.kernel_lib.xsi_get_int_port( self.handle, port_number, Xsi_Loader.xsiHDLValueSize )
         return port_size
+
+
     
     # trace_all
     # get_error_info

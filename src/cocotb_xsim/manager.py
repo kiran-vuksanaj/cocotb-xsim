@@ -60,9 +60,9 @@ class XSimManager:
 
     def _init_port_handles(self,port_info):
         out = {}
-        for port in port_info:
-            handle = XsiPortHandle(self,port[0],port[1])
-            out[ port[0] ] = handle
+        for portname in port_info.keys():
+            handle = XsiPortHandle(self,portname,port_info[portname][1])
+            out[ portname ] = handle
         return out
     
     def start_simulator(self):

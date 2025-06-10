@@ -82,7 +82,8 @@ class Vivado(cocotb.runner.Simulator):
                 )
 
 
-        cmds.extend( self._ip_synth_cmds(ip_sources) )
+        if len(ip_sources) > 0:
+            cmds.extend( self._ip_synth_cmds(ip_sources) )
         # cmds.append(['vivado', '-mode', 'batch', '-source', 'build_ip.tcl'])
         # cmds.append(['xvhdl', '--incr', '--relax', '-prj', '.ip_user_files/sim_scripts/cordic_0/xsim/vhdl.prj'])
         # cmds.append
@@ -114,6 +115,7 @@ class Vivado(cocotb.runner.Simulator):
         xilinx_root = environ['XILINX_VIVADO']
         self.env["LD_LIBRARY_PATH"] = f"{xilinx_root}/lib/lnx64.o:{xilinx_root}/lib/lnx64.o/Default:"
         self.env["VIVADO_SNAPSHOT_NAME"] = "pybound_sim"
+        self.env["TOPLEVEL_LANG"] = self.hdl_toplevel_lang
 
         return cmd
 
