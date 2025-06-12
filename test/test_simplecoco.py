@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
 import cocotb
-from cocotb.triggers import Timer
+from cocotb.triggers import Timer, RisingEdge
 from pathlib import Path
 
 # from cocotb.runner import get_runner
 from cocotb_xsim.vivado_runner import get_runner
-from cocotb.binary import BinaryValue
+from cocotb.binary import BinaryValue, LogicArray
 from cocotb.clock import Clock
 
 @cocotb.test()
@@ -23,7 +23,7 @@ async def cocotb_a(dut):
     await Timer(300,units='ns')
     dut._log.info(f"clock value: {dut.clk.value}")
     dut._log.info(f"value type: {type(dut.clk.value)}")
-    dut.incr_in.value = BinaryValue('Z')
+    dut.incr_in.value = LogicArray('Z')
     await Timer(20,units='ns')
     dut._log.info(f"incr value: {dut.incr_in.value.binstr}")
     dut._log.info("done")
@@ -46,7 +46,24 @@ async def cocotb_b(dut):
     dut._log.info( f'cordic_out: {dut.cordic_out.value.binstr}' )
     dut._log.info( f'cordic_valid: {dut.cordic_valid.value.binstr}' )
 
-    
+
+@cocotb.test(skip=True)
+async def using_edges(dut):
+    cocotb.start_soon( Clock(dut.clk,10,units='ns').start() )
+    dut.rst.value = 1
+    dut.incr_in.value = 0
+    await RisingEdge(dut.clk)
+    dut._log.info("one rising edge completed")
+    await RisingEdge(dut.clk)
+    dut._log.info("two rising edges completed")
+    dut.rst.value = 0
+    dut.incr_in.value = 1
+    await RisingEdge(dut.clk)
+    await RisingEdge(dut.clk)
+    await RisingEdge(dut.clk)
+    dut._log.info(f"three more rising edges done: count_out = {dut.count_out.value.integer}")
+
+      
 def test_completetb():
     tb_name = "test_simplecoco"
 

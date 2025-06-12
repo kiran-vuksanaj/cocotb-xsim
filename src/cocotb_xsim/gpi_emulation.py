@@ -36,7 +36,7 @@ def get_root_handle(root_name):
     return XSimManager.inst().get_root_handle()
 
 def register_timed_callback(t, cb, ud):
-    return XSimManager.inst().register_cb(t,cb,ud)
+    return XSimManager.inst().register_timed_cb(t,cb,ud)
 
 
 def register_value_change_callback(handle,callback,edge,ud):
@@ -44,18 +44,22 @@ def register_value_change_callback(handle,callback,edge,ud):
 
 def register_readonly_callback(cb,ud):
     # jankjankjank
+    # print("READONLY CALLBACK!")
+    return XSimManager.inst().register_readonly_cb(cb,ud)
+
+
+def register_nextstep_callback(cb,ud):
     return register_timed_callback(1,cb,ud)
-
-
-def register_nextstep_callback(*args, **kwargs):
-    raise Exception("Nuh Uh")
 
 def register_rwsynch_callback(cb, ud):
     # print("registering rwSync callback")
-    return register_timed_callback(1,cb,ud)
+    # return register_timed_callback(0,cb,ud)
+    return XSimManager.inst().register_readwrite_cb(cb,ud)
 
 def stop_simulator():
+    # print("STOPPING SIMULATOR")
     XSimManager.inst().stop_simulator()
+    # print("simulator stop success")
 
 def log_level(level):
     # TODO skipping 4 now
@@ -77,8 +81,5 @@ def get_simulator_product():
 
 def get_simulator_version():
     return "???"
-
-def gpi_sim_hdl():
-    raise Exception("???")
 
 OBJECTS = []

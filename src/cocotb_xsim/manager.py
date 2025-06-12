@@ -4,7 +4,7 @@
 
 from cocotb_xsim.interface_xsim import XSimInterface, XSI_XSimInterface
 
-from cocotb_xsim.vivado_handles import XsimRootHandle, XsiPortHandle, TimedCbClosure, ValueChangeCbClosure
+from cocotb_xsim.vivado_handles import XsimRootHandle, XsiPortHandle, TimedCbClosure, ValueChangeCbClosure, ReadWriteCbClosure, ReadOnlyCbClosure
 
 class XSimManager:
 
@@ -22,37 +22,85 @@ class XSimManager:
 
         self.sim = interface_type()
         self.ports = {}
-        self._cbqueue = {}
+        self._timerqueue = {
+            0:[]
+        }
         self._vcqueue = []
+        
+        self._readwrite_queue = []
+        self._readonly_queue = []
 
-    def attempt_valuechange_callbacks(self):
+        self.is_running = False
+
+
+    def _attempt_valuechange_callbacks(self):
         # print(f"making attempts on {len(self._vcqueue)}")
         for vc in self._vcqueue:
-            if vc is not None and vc.change_condition_satisfied():
+            if vc.cb is not None and vc.change_condition_satisfied():
                 vc()
                 # print("removing one")
                 self._vcqueue.remove(vc)
             # else:
             #     print("No")
 
+    def _any_callbacks_primed(self,callback_list):
+        for callback in callback_list:
+            if callback.cb is not None:
+                return True
+        return False
 
     def run(self):
-        while len(self._cbqueue) > 0:
-            next_time = min(self._cbqueue.keys())
-            
-            time_to_run = next_time - self.get_sim_time()
+        next_time = 0
+        while len(self._timerqueue) > 0:
+
+            # loop between normal state -> readwrite state
+            # during normal state: check valuechange callbacks
 
 
-            self.sim.advance(time_to_run)
-            for cb in self._cbqueue[next_time]:
+            # first normal state: execute all callbacks scheduled for this timestep
+            # (in order they were registered)
+            for cb in self._timerqueue[next_time]:
                 if cb is not None:
                     cb()
-                # TODO this does not seem comprehensive yet; checking value changes /once/
-                self.attempt_valuechange_callbacks()
+            
+            self._timerqueue.pop(next_time)
 
-            self._cbqueue.pop(next_time)
+            self._attempt_valuechange_callbacks()
 
-        return False
+            while(self._readwrite_queue):
+                # release for readwrite phase, values will be set
+                # print(f"New RW cycle at time {next_time}")
+                self.sim.advance(1)
+                released_rw_cb = self._readwrite_queue.pop(0)
+                if released_rw_cb is not None:
+                    released_rw_cb()
+
+                # once ReadWrite callback executes, all pending writes are complete
+                # so, in new stable state, re-attempt value-change callbacks
+                self._attempt_valuechange_callbacks()
+
+            # print("Read Only callbacks: ",self._readonly_queue)
+            # once this exits, there are no more readwrite stages
+            # so readonly callbacks can run (cannot register value-sets)
+            self.sim.advance(1)
+            for cb in self._readonly_queue:
+                if cb is not None:
+                    cb()
+
+            self._readwrite_queue = []
+            self._readonly_queue = []
+
+            
+            next_time = min(self._timerqueue.keys())
+            if (self._any_callbacks_primed( self._timerqueue[next_time] )):
+                time_to_run = next_time - self.get_sim_time()
+                self.sim.advance(time_to_run)
+                # print("NEW TIME STEP",next_time)
+            else:
+                # print("no active callbacks!")
+                self._timerqueue.pop(next_time)
+                continue
+
         
     def get_root_handle(self):
         return XsimRootHandle(self)
@@ -68,32 +116,52 @@ class XSimManager:
     def start_simulator(self):
         self.sim.launch_simulator()
         self.ports = self._init_port_handles( self.sim.list_port_names() )
+        self.is_running = True
 
-    def register_cb(self,t,cb,ud):
+    def register_timed_cb(self,t,cb,ud):
 
         ret = TimedCbClosure(t,cb,ud)
 
         time_to_fire = self.get_sim_time()+t
 
-        if time_to_fire in self._cbqueue:
-            self._cbqueue[time_to_fire].append(ret)
+        if time_to_fire in self._timerqueue:
+            self._timerqueue[time_to_fire].append(ret)
         else:
-            self._cbqueue[time_to_fire] = [ret]
+            self._timerqueue[time_to_fire] = [ret]
         
         return ret
-        # print("ud",ud)
 
     def register_vc_cb(self,handle,callback,edge,ud):
-        # print("adding one")
+
         closure = ValueChangeCbClosure(handle,edge,callback,ud)
         self._vcqueue.append(closure)
+        return closure
+
+    def register_readwrite_cb(self,callback,trigger):
+        closure = ReadWriteCbClosure(callback,trigger)
+        self._readwrite_queue.append( closure )
+        return closure
+
+    def register_readonly_cb(self,callback,trigger):
+        closure = ReadOnlyCbClosure(callback,trigger)
+        self._readonly_queue.append( closure )
         return closure
         
 
     def get_sim_time(self):
         return self.sim.sim_getsimtime()
 
+    def sim_setvalue(self,name,value):
+        self.sim.sim_setvalue(name,value)
+
     def stop_simulator(self):
+        # print("queues:")
+        # print(f"timed callbacks: {self._timerqueue}")
+        # print(f"value change callbacks: {self._vcqueue}")
+        # print(f"read-write callbacks: {self._readwrite_queue}")
+        # print(f"read-only callbacks: {self._readonly_queue}")
+
+        self.is_running = False
         self.sim.stop_simulator()
 
     @classmethod

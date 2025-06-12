@@ -74,15 +74,17 @@ class XsiPortHandle(object):
         return (self.size - 1, 0)
 
     def set_signal_val_int(self, action, value):
-        # also what does action do?
+        # also what does action do? answer: action is FORCE, DEPOSIT, RELEASE, OR NO_DELAY.
         str_value = f"{value:0{self.size}b}"
-        self.mgr.sim.sim_setvalue(self.name, str_value)
+        self.set_signal_val_binstr(action,str_value)
 
     def set_signal_val_binstr(self, action, value):
+        print(f"setting {self.name} to {value}, action type={action}")
         self.mgr.sim.sim_setvalue(self.name, value)
 
     def get_signal_val_binstr(self):
         value = self.mgr.sim.sim_getvalue(self.name)
+        # print(f"getting {self.name}, its equal to {value}")
         # this should return a binstr
         return value
         # format_str = "{value:0"+str(self.size)+"b}"
@@ -90,7 +92,8 @@ class XsiPortHandle(object):
         # return binstr
 
     def get_signal_val_int(self):
-        value = self.mgr.sim.sim_getvalue(self.name)
+        value = self.get_signal_val_binstr()
+        value = int(value,2)
         return value
 
 class CbClosure(abc.ABC):
@@ -103,6 +106,7 @@ class CbClosure(abc.ABC):
             self.cb(self.ud)
 
     def deregister(self):
+        # print(f"CALLBACK DEREGISTERED! {self}")
         self.cb = None
 
 class TimedCbClosure(CbClosure):
@@ -120,15 +124,33 @@ class ValueChangeCbClosure(CbClosure):
         self.ud = ud
         self.edge = edge
 
-        self.previous_value = handle.get_signal_val_int()
+        # self.previous_value = 0
+        try:
+            self.previous_value = handle.get_signal_val_int()
+        except ValueError:
+            self.previous_value = None
 
     def change_condition_satisfied(self):
-        current_value = self.handle.get_signal_val_int()
+        try:
+            current_value = self.handle.get_signal_val_int()
+        except ValueError:
+            current_value = None
+
         # print(f"Change condition satisfied? {self.previous_value}, {current_value}, {self.handle}, {self.edge}")
         if self.edge == 1:
-            out = current_value > self.previous_value
+            out = (current_value == 1) and (self.previous_value == 0 or self.previous_value is None)
         else:
-            out = current_value < self.previous_value
+            out = (current_value == 0) and (self.previous_value == 1 or self.previous_value is None)
 
         self.previous_value = current_value
         return out
+
+class ReadWriteCbClosure(CbClosure):
+    def __init__(self, callback, trigger):
+        self.cb = callback
+        self.ud = trigger
+
+class ReadOnlyCbClosure(CbClosure):
+    def __init__(self, callback, trigger):
+        self.cb = callback
+        self.ud = trigger

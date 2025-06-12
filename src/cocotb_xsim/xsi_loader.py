@@ -155,6 +155,7 @@ class Xsi_Loader:
 
     def get_value(self,port_number,port_size):
 
+        # print("XSI GET VALUE")
         value_space_type = self.xsi_compliant_space_type(port_size)
         value_space = value_space_type()
         value_pointer = ctypes.pointer(value_space)
@@ -166,6 +167,7 @@ class Xsi_Loader:
         return self.xsi2binstr(value_pointer.contents,port_size)
 
     def put_value(self,port_number,port_size,value):
+        # print("XSI PUT VALUE",self.get_time())
         value_space = self.binstr2xsi(value,port_size)
         value_pointer = ctypes.pointer(value_space)
 
