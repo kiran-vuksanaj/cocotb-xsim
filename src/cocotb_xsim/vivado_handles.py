@@ -79,7 +79,7 @@ class XsiPortHandle(object):
         self.set_signal_val_binstr(action,str_value)
 
     def set_signal_val_binstr(self, action, value):
-        print(f"setting {self.name} to {value}, action type={action}")
+        # print(f"setting {self.name} to {value}, action type={action}")
         self.mgr.sim.sim_setvalue(self.name, value)
 
     def get_signal_val_binstr(self):

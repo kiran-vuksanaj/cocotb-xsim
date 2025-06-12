@@ -67,6 +67,9 @@ class XSimManager:
 
             self._attempt_valuechange_callbacks()
 
+            if (not self.is_running):
+                break
+            
             while(self._readwrite_queue):
                 # release for readwrite phase, values will be set
                 # print(f"New RW cycle at time {next_time}")
@@ -90,6 +93,8 @@ class XSimManager:
             self._readwrite_queue = []
             self._readonly_queue = []
 
+            if (len(self._timerqueue) == 0):
+                continue
             
             next_time = min(self._timerqueue.keys())
             if (self._any_callbacks_primed( self._timerqueue[next_time] )):

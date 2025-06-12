@@ -47,7 +47,7 @@ async def cocotb_b(dut):
     dut._log.info( f'cordic_valid: {dut.cordic_valid.value.binstr}' )
 
 
-@cocotb.test(skip=True)
+@cocotb.test()
 async def using_edges(dut):
     cocotb.start_soon( Clock(dut.clk,10,units='ns').start() )
     dut.rst.value = 1
