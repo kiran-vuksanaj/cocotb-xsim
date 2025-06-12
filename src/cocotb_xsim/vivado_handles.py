@@ -32,9 +32,8 @@ class XsimRootHandle(object):
         return ""
 
     def iterate(self, nothing):
-        pass
-        # for name in self.mgr.ports:
-        #     yield self.mgr.ports[name]
+        for name in self.mgr.ports:
+            yield self.mgr.ports[name]
 
     def get_handle_by_name(self, name):
         if name not in self.mgr.ports:
