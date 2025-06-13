@@ -35,14 +35,17 @@ class XSimManager:
 
     def _attempt_valuechange_callbacks(self):
         # print(f"making attempts on {len(self._vcqueue)}")
+        # something_ran = False
         for vc in self._vcqueue:
             if vc.cb is not None and vc.change_condition_satisfied():
+                # print("running vc")
                 vc()
+                # something_ran = True
                 # print("removing one")
                 self._vcqueue.remove(vc)
-            # else:
-            #     print("No")
 
+        # return something_ran
+        
     def _any_callbacks_primed(self,callback_list):
         for callback in callback_list:
             if callback.cb is not None:
@@ -86,6 +89,7 @@ class XSimManager:
             # once this exits, there are no more readwrite stages
             # so readonly callbacks can run (cannot register value-sets)
             self.sim.advance(1)
+            self._attempt_valuechange_callbacks()
             for cb in self._readonly_queue:
                 if cb is not None:
                     cb()
