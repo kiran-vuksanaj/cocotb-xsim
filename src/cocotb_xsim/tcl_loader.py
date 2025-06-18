@@ -12,8 +12,11 @@ class Tcl_XSimInterface(XSimInterface):
 
         self._simproc = None
 
+        # self.command_times = {}
+        # self.cmd_count = {}
 
-    def _pass_command(self,command_str):
+
+    def _pass_command(self,command_str,cat="default"):
         """
         Returns process to predictable state while passing a command and returning response
         """
@@ -30,6 +33,7 @@ class Tcl_XSimInterface(XSimInterface):
         resp_start_idx = resp.find(command_str) + len(command_str)
         resp = resp[resp_start_idx:].strip()
 
+
         return resp
 
 
@@ -40,6 +44,7 @@ class Tcl_XSimInterface(XSimInterface):
         # self._simproc = subprocess.Popen(["xsim","pybound_sim"],stdin=subprocess.PIPE,stdout=subprocess.PIPE)
 
         self._simproc = pexpect.spawn("xsim pybound_sim", encoding='utf-8',searchwindowsize=200)
+        self._simproc.delaybeforesend = None
 
         fout = open('pybound_xsim.log','w')
         self._simproc.logfile = fout
@@ -67,6 +72,9 @@ class Tcl_XSimInterface(XSimInterface):
         self._simproc.sendline("exit")
         self._simproc.expect(pexpect.EOF)
         self._simproc = None
+
+        # print("COMMAND TIMES:",self.command_times)
+        # print("COMMAND COUNT:",self.command_count)
 
 
     def _load_portmap(self):
