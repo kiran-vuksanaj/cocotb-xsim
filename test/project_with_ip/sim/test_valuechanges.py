@@ -55,7 +55,8 @@ def test_completetb():
     tb_name = "test_valuechanges"
 
     proj_path = Path(__file__).resolve().parent
-    sources = [proj_path / "../hdl/valuechanger.sv"]
+    sources = [proj_path / "../hdl/valuechanger.sv",
+               proj_path / "../hdl/valuechanger_tb.sv"]
     sim = os.getenv("SIM","vivado")
     hdl_toplevel_lang = "verilog"
     toplevel = "valuechanger"

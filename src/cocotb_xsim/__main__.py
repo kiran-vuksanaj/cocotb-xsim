@@ -10,11 +10,14 @@ from cocotb_xsim.manager import XSimManager
 sys.modules["cocotb.simulator"] = importlib.import_module("cocotb_xsim.gpi_emulation")
 import cocotb
 
+from os import getenv
+
 def _initialize_simulator(argv_):
 
     # create (single universal) instance of the simulator manager
     # so that it can be used by the gpi emulation modules
-    sim_manager = XSimManager.init()
+    launch_mode = getenv("XSIM_INTERFACE",'XSI')
+    sim_manager = XSimManager.init(launch_mode)
     sim_manager.start_simulator()
 
     # TODO replace with proper reference to PYGPI_ENTRYPOINT / PYGPI_USERS

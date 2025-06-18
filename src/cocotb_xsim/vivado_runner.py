@@ -14,6 +14,10 @@ from os import environ
 class Vivado(cocotb.runner.Simulator):
 
     supported_gpi_interfaces = {'verilog': ['xsi'], 'vhdl': ['xsi']}
+
+    def __init__(self,mode):
+        self.launch_mode = mode
+        super().__init__()
     
     @staticmethod
     def _simulator_in_path() -> None:
@@ -95,10 +99,14 @@ class Vivado(cocotb.runner.Simulator):
         elab_cmd = ["xelab",
                     "-top", self.hdl_toplevel,
                     "-snapshot", "pybound_sim",
-                    "-debug", "wave",
-                    "-dll",
                     "-L","xil_defaultlib"
                     ]
+
+        if (self.launch_mode == 'XSI'):
+            elab_cmd.extend(['-dll','-debug','wave'])
+        else:
+            elab_cmd.extend(['-debug','all'])
+        
         cmds.append(elab_cmd)
 
         print("Build Commands: ",cmds)
@@ -116,6 +124,7 @@ class Vivado(cocotb.runner.Simulator):
         self.env["LD_LIBRARY_PATH"] = f"{xilinx_root}/lib/lnx64.o:{xilinx_root}/lib/lnx64.o/Default:"
         self.env["VIVADO_SNAPSHOT_NAME"] = "pybound_sim"
         self.env["TOPLEVEL_LANG"] = self.hdl_toplevel_lang
+        self.env["XSIM_INTERFACE"] = self.launch_mode
 
         return cmd
 
@@ -130,7 +139,9 @@ def get_runner(simulator_name: str) -> cocotb.runner.Simulator:
     """
 
     if simulator_name == "vivado":
-        return Vivado()
+        return Vivado('XSI')
+    elif simulator_name == "vivado_tcl":
+        return Vivado('TCL')
     else:
         return cocotb.runner.get_runner(simulator_name)
 

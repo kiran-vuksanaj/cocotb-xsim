@@ -4,6 +4,8 @@ import cocotb
 from cocotb.triggers import Timer, RisingEdge
 from pathlib import Path
 
+import os
+
 # from cocotb.runner import get_runner
 from cocotb_xsim.vivado_runner import get_runner
 from cocotb.binary import BinaryValue, LogicArray
@@ -69,7 +71,7 @@ def test_completetb():
 
     proj_path = Path(__file__).resolve().parent
     sources = [proj_path / "counter.sv"]
-    sim = "vivado"
+    sim = os.getenv('SIM','vivado')
     hdl_toplevel_lang = "verilog"
     toplevel = "counter"
     runner = get_runner(sim)

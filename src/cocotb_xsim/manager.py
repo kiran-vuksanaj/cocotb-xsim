@@ -3,6 +3,7 @@
 # minimally adapted from themperek/cocotb-vivado ; thank you!!
 
 from cocotb_xsim.interface_xsim import XSimInterface, XSI_XSimInterface
+from cocotb_xsim.tcl_loader import Tcl_XSimInterface
 
 from cocotb_xsim.vivado_handles import XsimRootHandle, XsiPortHandle, TimedCbClosure, ValueChangeCbClosure, ReadWriteCbClosure, ReadOnlyCbClosure
 
@@ -14,11 +15,13 @@ class XSimManager:
 
     _inst = None
     
-    def __init__(self, mode="XSI"):
+    def __init__(self, mode):
 
         interface_type = XSimInterface
         if mode=="XSI":
             interface_type = XSI_XSimInterface
+        elif mode == "TCL":
+            interface_type = Tcl_XSimInterface
 
         self.sim = interface_type()
         self.ports = {}
@@ -30,8 +33,13 @@ class XSimManager:
         self._readwrite_queue = []
         self._readonly_queue = []
 
+        self.time = 0
+
         self.is_running = False
 
+    def _sim_advance(self,steps):
+        self.time += steps
+        self.sim.advance(steps)
 
     def _attempt_valuechange_callbacks(self):
         # print(f"making attempts on {len(self._vcqueue)}")
@@ -76,7 +84,7 @@ class XSimManager:
             while(self._readwrite_queue):
                 # release for readwrite phase, values will be set
                 # print(f"New RW cycle at time {next_time}")
-                self.sim.advance(1)
+                self._sim_advance(1)
                 released_rw_cb = self._readwrite_queue.pop(0)
                 if released_rw_cb is not None:
                     released_rw_cb()
@@ -88,7 +96,7 @@ class XSimManager:
             # print("Read Only callbacks: ",self._readonly_queue)
             # once this exits, there are no more readwrite stages
             # so readonly callbacks can run (cannot register value-sets)
-            self.sim.advance(1)
+            self._sim_advance(1)
             self._attempt_valuechange_callbacks()
             for cb in self._readonly_queue:
                 if cb is not None:
@@ -103,7 +111,7 @@ class XSimManager:
             next_time = min(self._timerqueue.keys())
             if (self._any_callbacks_primed( self._timerqueue[next_time] )):
                 time_to_run = next_time - self.get_sim_time()
-                self.sim.advance(time_to_run)
+                self._sim_advance(time_to_run)
                 # print("NEW TIME STEP",next_time)
             else:
                 # print("no active callbacks!")
@@ -158,7 +166,8 @@ class XSimManager:
         
 
     def get_sim_time(self):
-        return self.sim.sim_getsimtime()
+        return self.time
+        # return self.sim.sim_getsimtime()
 
     def sim_setvalue(self,name,value):
         self.sim.sim_setvalue(name,value)
@@ -180,6 +189,6 @@ class XSimManager:
         return cls._inst
 
     @classmethod
-    def init(cls):
-        cls._inst = XSimManager()
+    def init(cls,mode):
+        cls._inst = XSimManager(mode)
         return cls._inst
