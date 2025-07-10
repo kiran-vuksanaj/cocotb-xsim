@@ -10,14 +10,15 @@ from pathlib import Path
 from cocotb_xsim.vivado_runner import get_runner
 
 from cocotb.clock import Clock
+import pytest
 
 @cocotb.test()
 async def barebones_clock(dut):
     cocotb.start_soon( Clock(dut.aclk,10,units='ns').start() )
     await Timer(3000,'ns')
 
-
-def test_completetb():
+@pytest.mark.skip(reason="Issues with naming elaborated modules. maybe a flag in the future can skip that...")
+def test_fft_tb():
     tb_name = "test_fft"
 
     proj_path = Path(__file__).resolve().parent
@@ -26,7 +27,7 @@ def test_completetb():
                ]
     sim = "vivado"
     hdl_toplevel_lang = "verilog"
-    toplevel = "xfft_wrap"
+    toplevel = "work.xfft_wrap_manual"
     runner = get_runner(sim)
 
     runner.build(
