@@ -84,7 +84,7 @@ class XSimManager:
             while(self._readwrite_queue):
                 # release for readwrite phase, values will be set
                 # print(f"New RW cycle at time {next_time}")
-                self._sim_advance(1)
+                self._sim_advance(0)
                 released_rw_cb = self._readwrite_queue.pop(0)
                 if released_rw_cb is not None:
                     released_rw_cb()
@@ -96,7 +96,7 @@ class XSimManager:
             # print("Read Only callbacks: ",self._readonly_queue)
             # once this exits, there are no more readwrite stages
             # so readonly callbacks can run (cannot register value-sets)
-            self._sim_advance(1)
+            self._sim_advance(0)
             self._attempt_valuechange_callbacks()
             for cb in self._readonly_queue:
                 if cb is not None:
