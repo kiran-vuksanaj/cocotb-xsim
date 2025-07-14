@@ -4,22 +4,46 @@ import cocotb
 from cocotb.triggers import Timer, RisingEdge, ClockCycles, ReadOnly
 from cocotb.clock import Clock
 
-
-
+from model.AXIStream import AXISMonitor, AXISDriver
 
 
 
 @cocotb.test()
-async def clocked_fifo(dut):
+async def clock_only(dut):
 
-    cocotb.start_soon( Clock(dut.clk, 10, units='ns').start() )
+    cocotb.start_soon( Clock(dut.s_axis_aclk, 10, units='ns').start() )
 
+    await Timer(2000,units='ns')
 
-    await Timer(2000,units='ps')
+@cocotb.test()
+async def monitored_and_driven_i(dut):
 
+    cocotb.start_soon( Clock(dut.s_axis_aclk, 10, units='ns').start() )
 
+    inm = AXISMonitor(dut,'s',dut.s_axis_aclk)
+    outm = AXISMonitor(dut,'m',dut.s_axis_aclk)
 
+    ind = AXISDriver(dut,'s',dut.s_axis_aclk)
 
+    dut.s_axis_aresetn.value = 1
+    await ClockCycles(dut.s_axis_aclk,2)
+    dut.s_axis_aresetn.value = 0
+    dut.m_axis_tready.value = 0
+    await ClockCycles(dut.s_axis_aclk,10)
+    dut.s_axis_aresetn.value = 1
+    
+    dut.m_axis_tready.value = 1
+    
+    for i in range(1,10):
+        ind.append({'data':i,'last':0})
+    ind.append({'data':10,'last':1})
+    
+    await ClockCycles(dut.s_axis_aclk,15)
+    dut.m_axis_tready.value = 0
+    await ClockCycles(dut.s_axis_aclk,8)
+    dut.m_axis_tready.value = 1
+    await ClockCycles(dut.s_axis_aclk,15)
+    dut._log.info("Done!")
 
 
 
@@ -46,7 +70,7 @@ def test_fifotb():
     runner.build(
         sources=sources,
         hdl_toplevel=toplevel,
-        always=True,
+        always=False,
         timescale = ('1ns','1ps'),
         waves=True)
     runner.test(
