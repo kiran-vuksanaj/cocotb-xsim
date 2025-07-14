@@ -32,7 +32,7 @@ class Vivado(cocotb.runner.Simulator):
 
         """
         if(len(file_info) == 5):
-            filename, language, output_lib, filepath, include_dirs = file_info
+             filename, language, output_lib, filepath, include_dirs = file_info
         else:
             filename, language, output_lib, filepath = file_info
             include_dirs = ""
@@ -72,6 +72,24 @@ class Vivado(cocotb.runner.Simulator):
         return cmd
         
 
+    def _outofdate_ip(self,xci_files: Sequence[PathLike]) -> Sequence[PathLike]:
+
+        # if self.always:
+        #     return xci_files
+
+        outofdate = []
+        
+        for xci_file in xci_files:
+
+            xci_file = Path(xci_file).resolve()
+            ip_name = xci_file.stem
+            sample_ip_user_file = self.build_dir / ".ip_user_files" / "sim_scripts" / ip_name / "xsim" / "README.txt"
+
+            if cocotb.runner.outdated(sample_ip_user_file,[xci_file]):
+                outofdate.append(xci_file)
+
+        print("Out Of Date: ",outofdate)
+        return outofdate
         
     def _ip_synth_cmds(self, xci_files: Sequence[PathLike], partNum: Union[str,None] = None) -> Sequence[Command]:
         """
@@ -82,17 +100,20 @@ class Vivado(cocotb.runner.Simulator):
             partNum = "xc7s50csga324-1"
 
         # build tiny vivado script to usep
-        with open(self.build_dir / "build_ip.tcl","w") as f:
-            f.write(f"set partNum {partNum}\n")
-            f.write("set_part $partNum\n")
-
-            for xci_path in xci_files:
-                f.write(f"read_ip {xci_path}\n")
-            f.write("export_ip_user_files\n")
 
         ip_cmds: Sequence[Command] = []
 
-        self._execute( [['vivado', '-mode', 'batch', '-source', 'build_ip.tcl']], cwd=self.build_dir)
+        outdated_xci_files = self._outofdate_ip(xci_files)
+
+        if (len(outdated_xci_files) > 0):
+            with open(self.build_dir / "build_ip.tcl","w") as f:
+                f.write(f"set partNum {partNum}\n")
+                f.write("set_part $partNum\n")
+
+                for xci_path in outdated_xci_files:
+                    f.write(f"read_ip {xci_path}\n")
+                f.write("export_ip_user_files\n")
+            self._execute( [['vivado', '-mode', 'batch', '-source', 'build_ip.tcl']], cwd=self.build_dir)
 
 
         for xci_filename in xci_files:
@@ -189,7 +210,6 @@ class Vivado(cocotb.runner.Simulator):
 
         self.snapshot_name = "pybound_sim"
 
-        print(self.includes,'included!!')
         elab_cmd = ["xelab",
                     "-top", self.hdl_toplevel,
                     "-snapshot", "pybound_sim",
