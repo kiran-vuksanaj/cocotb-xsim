@@ -69,8 +69,8 @@ async def using_edges(dut):
 def test_completetb():
     tb_name = "test_simplecoco"
 
-    proj_path = Path(__file__).resolve().parent
-    sources = [proj_path / "counter.sv"]
+    proj_path = Path(__file__).resolve().parent.parent
+    sources = [proj_path / "hdl" / "counter.sv"]
     sim = os.getenv('SIM','vivado')
     hdl_toplevel_lang = "verilog"
     toplevel = "counter"
