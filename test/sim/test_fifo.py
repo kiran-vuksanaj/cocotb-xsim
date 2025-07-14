@@ -59,11 +59,11 @@ def test_fifotb():
     tb_name = file_path.stem
     proj_path = file_path.parent.parent
     sources = [proj_path / "ip/fifo_dut_sync/fifo_dut_sync.xci",
-               proj_path / "hdl" / "fifo_wrap.sv"
+               # proj_path / "hdl" / "fifo_wrap.sv"
                ]
     sim = "vivado"
     hdl_toplevel_lang = "verilog"
-    toplevel = "fifo_wrap"
+    toplevel = "xil_defaultlib.fifo_dut_sync"
 
     runner = get_runner(sim)
 
