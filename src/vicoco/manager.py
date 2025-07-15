@@ -2,10 +2,10 @@
 
 # minimally adapted from themperek/cocotb-vivado ; thank you!!
 
-from cocotb_xsim.interface_xsim import XSimInterface, XSI_XSimInterface
-from cocotb_xsim.tcl_loader import Tcl_XSimInterface
+from vicoco.interface_xsim import XSimInterface, XSI_XSimInterface
+# from vicoco.tcl_loader import Tcl_XSimInterface
 
-from cocotb_xsim.vivado_handles import XsimRootHandle, XsiPortHandle, TimedCbClosure, ValueChangeCbClosure, ReadWriteCbClosure, ReadOnlyCbClosure
+from vicoco.vivado_handles import XsimRootHandle, XsiPortHandle, TimedCbClosure, ValueChangeCbClosure, ReadWriteCbClosure, ReadOnlyCbClosure
 
 class XSimManager:
 

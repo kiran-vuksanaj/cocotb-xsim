@@ -3,11 +3,11 @@
 import importlib
 import sys
 
-from cocotb_xsim.manager import XSimManager
+from vicoco.manager import XSimManager
 
 # cocotb.simulator is usually populated with C GPI functions that call out to the simulator
 # we replace those with our gpi_emulation module, which hook back into our manager
-sys.modules["cocotb.simulator"] = importlib.import_module("cocotb_xsim.gpi_emulation")
+sys.modules["cocotb.simulator"] = importlib.import_module("vicoco.gpi_emulation")
 import cocotb
 
 from os import getenv

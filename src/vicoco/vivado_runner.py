@@ -239,7 +239,7 @@ class Vivado(cocotb.runner.Simulator):
         # bridge to cross: everything needs to become internalized to a module
 
         cmd = [
-            ["python3", "-m", "cocotb_xsim"]
+            ["python3", "-m", "vicoco"]
         ]
 
         xilinx_root = environ['XILINX_VIVADO']
@@ -295,7 +295,7 @@ def makefile_recreate():
     new_env["SNAPSHOT_NAME"] = "pybound_sim"
     new_env["MODULE"] = module
     
-    launch_cmd = ["python3", "-m", "cocotb_xsim"]
+    launch_cmd = ["python3", "-m", "vicoco"]
     status = subprocess.run(launch_cmd, env=new_env)
     print(f'launch status: {status}')
 

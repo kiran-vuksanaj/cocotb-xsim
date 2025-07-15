@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from cocotb_xsim.interface_xsim import XSimInterface
+from vicoco.interface_xsim import XSimInterface
 
 import pexpect
 import re

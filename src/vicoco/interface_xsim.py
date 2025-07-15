@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import abc
-from cocotb_xsim.xsi_loader import Xsi_Loader
+from vicoco.xsi_loader import Xsi_Loader
 
 class XSimInterface(abc.ABC):
 

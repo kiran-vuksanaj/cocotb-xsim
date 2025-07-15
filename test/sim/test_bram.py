@@ -16,7 +16,7 @@ async def clocks_only(dut):
     await Timer(200,units='ns')
 
 
-from cocotb_xsim.vivado_runner import get_runner
+from vicoco.vivado_runner import get_runner
 from pathlib import Path
 
 def test_bramtb():

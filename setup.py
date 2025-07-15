@@ -3,7 +3,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='cocotb-xsim',
+    name='vicoco',
     version='v0.0.1',
     description='Vivado xsim compatibility',
     author='Kiran Vuksanaj',

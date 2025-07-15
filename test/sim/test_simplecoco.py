@@ -7,7 +7,7 @@ from pathlib import Path
 import os
 
 # from cocotb.runner import get_runner
-from cocotb_xsim.vivado_runner import get_runner
+from vicoco.vivado_runner import get_runner
 from cocotb.binary import BinaryValue, LogicArray
 from cocotb.clock import Clock
 
